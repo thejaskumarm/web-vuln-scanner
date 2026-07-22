@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Web Vulnerability Scanner — OWASP Top 10</title>
+  <meta name="description" content="Free educational web vulnerability scanner. Check your website for OWASP Top 10 security misconfigurations including missing headers, SQLi, XSS, and more." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body>
+
+  <!-- ── Animated background ───────────────────── -->
+  <div class="bg-grid" aria-hidden="true"></div>
+  <div class="bg-glow bg-glow--1" aria-hidden="true"></div>
+  <div class="bg-glow bg-glow--2" aria-hidden="true"></div>
+
+  <!-- ── Header ────────────────────────────────── -->
+  <header class="header">
+    <div class="header__inner">
+      <div class="logo">
+        <span class="logo__icon">🔍</span>
+        <span class="logo__text">VulnScan</span>
+        <span class="logo__badge">OWASP Top 10</span>
+      </div>
+      <nav class="nav">
+        <a href="https://owasp.org/www-project-top-ten/" target="_blank" rel="noopener" class="nav__link">OWASP Docs</a>
+        <a href="https://github.com" target="_blank" rel="noopener" class="nav__link nav__link--cta">GitHub</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- ── Hero ──────────────────────────────────── -->
+  <main id="main-content">
+    <section class="hero">
+      <div class="hero__inner">
+        <div class="hero__badge">Educational Security Tool</div>
+        <h1 class="hero__title">
+          Find security issues<br />
+          <span class="hero__title--gradient">before hackers do.</span>
+        </h1>
+        <p class="hero__sub">
+          Paste your website URL below and instantly check for
+          OWASP Top 10 vulnerabilities — headers, HTTPS, SQLi, XSS, and more.
+        </p>
+
+        <!-- ── Scan Form ── -->
+        <form id="scan-form" class="scan-form" autocomplete="off" novalidate>
+          <div class="scan-form__field">
+            <span class="scan-form__icon" aria-hidden="true">🌐</span>
+            <input
+              id="url-input"
+              type="url"
+              class="scan-form__input"
+              placeholder="https://yourwebsite.com"
+              autocomplete="off"
+              spellcheck="false"
+              aria-label="Target URL to scan"
+              required
+            />
+            <button id="scan-btn" type="submit" class="scan-form__btn" aria-label="Start scan">
+              <span class="scan-form__btn-text">Scan Now</span>
+              <span class="scan-form__btn-icon" aria-hidden="true">→</span>
+            </button>
+          </div>
+          <p id="form-error" class="scan-form__error" role="alert" aria-live="polite" hidden></p>
+          <p class="scan-form__note">
+            ⚠ Only scan websites you own or have explicit permission to test.
+          </p>
+        </form>
+      </div>
+    </section>
+
+    <!-- ── Scan Panel ─────────────────────────── -->
+    <section id="scan-panel" class="scan-panel" hidden aria-live="polite">
+      <div class="scan-panel__inner">
+
+        <!-- Target bar -->
+        <div class="target-bar" id="target-bar">
+          <div class="target-bar__dot" id="target-dot"></div>
+          <span class="target-bar__label">Scanning:</span>
+          <span class="target-bar__url" id="target-url"></span>
+          <span class="target-bar__status" id="target-status"></span>
+        </div>
+
+        <!-- Progress -->
+        <div class="progress-wrap" id="progress-wrap">
+          <div class="progress-header">
+            <span id="progress-label" class="progress-label">Initializing…</span>
+            <span id="progress-pct" class="progress-pct">0%</span>
+          </div>
+          <div class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progress-track">
+            <div class="progress-fill" id="progress-fill"></div>
+          </div>
+          <div class="check-steps" id="check-steps"></div>
+        </div>
+
+        <!-- Results grid -->
+        <div class="results-grid" id="results-grid"></div>
+
+        <!-- Summary card -->
+        <div class="summary-card" id="summary-card" hidden>
+          <div class="summary-card__icon" id="summary-icon"></div>
+          <div class="summary-card__body">
+            <h2 class="summary-card__title" id="summary-title"></h2>
+            <p class="summary-card__desc" id="summary-desc"></p>
+          </div>
+          <div class="summary-card__actions">
+            <button class="summary-card__download" id="download-btn" aria-label="Download HTML report">
+              ⬇ Report
+            </button>
+            <button class="summary-card__reset" id="reset-btn" aria-label="Scan another URL">
+              Scan Another →
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ── Features ───────────────────────────── -->
+    <section class="features" id="features">
+      <div class="features__inner">
+        <h2 class="features__title">10 Checks. One Scan.</h2>
+        <div class="features__grid">
+          <div class="feature-card">
+            <div class="feature-card__icon">🛡️</div>
+            <h3 class="feature-card__title">Security Headers</h3>
+            <p class="feature-card__desc">Checks for X-Frame-Options, CSP, HSTS, and 3 more critical headers — OWASP A05</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-card__icon">🔐</div>
+            <h3 class="feature-card__title">HTTPS / TLS</h3>
+            <p class="feature-card__desc">Verifies your site enforces HTTPS and HTTP redirects properly — OWASP A02</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-card__icon">📂</div>
+            <h3 class="feature-card__title">Sensitive Files</h3>
+            <p class="feature-card__desc">Probes for exposed .env, .git, phpinfo, backups, and config files — OWASP A01</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-card__icon">💉</div>
+            <h3 class="feature-card__title">SQL Injection</h3>
+            <p class="feature-card__desc">Injects error-triggering payloads into URL parameters to detect DB leaks — OWASP A03</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-card__icon">↗️</div>
+            <h3 class="feature-card__title">Open Redirect</h3>
+            <p class="feature-card__desc">Tests common redirect parameters for unvalidated external destinations — OWASP A01</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-card__icon">🍪</div>
+            <h3 class="feature-card__title">Cookie Flags</h3>
+            <p class="feature-card__desc">Checks every cookie for Secure, HttpOnly, and SameSite flags — OWASP A07</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ── Footer ─────────────────────────────── -->
+  <footer class="footer">
+    <p>Built for education · <a href="https://owasp.org/www-project-top-ten/" target="_blank" rel="noopener">OWASP Top 10</a> · Only scan sites you own</p>
+  </footer>
+
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

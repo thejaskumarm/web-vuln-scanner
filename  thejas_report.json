@@ -1,0 +1,48 @@
+{
+  "scanner": "Web Vulnerability Scanner v2.0",
+  "target": "https://bhuvan.live",
+  "timestamp": "2026-07-22T13:41:42.180168",
+  "findings": {
+    "security_headers": [
+      {
+        "header": "X-Frame-Options",
+        "risk": "Clickjacking risk \u2014 site can be embedded in iframes"
+      },
+      {
+        "header": "X-Content-Type-Options",
+        "risk": "Browser may execute files with wrong MIME type"
+      },
+      {
+        "header": "Content-Security-Policy",
+        "risk": "No CSP \u2192 higher XSS and injection risk"
+      },
+      {
+        "header": "Referrer-Policy",
+        "risk": "Sensitive URLs may leak to third parties"
+      },
+      {
+        "header": "Permissions-Policy",
+        "risk": "Camera/mic/geolocation may be abused"
+      }
+    ],
+    "https": [
+      "No HTTP\u2192HTTPS redirect"
+    ],
+    "sensitive_files": [],
+    "cookies": [],
+    "csrf": [],
+    "server_disclosure": {
+      "Server": "GitHub.com",
+      "Via": "1.1 varnish"
+    },
+    "xss_indicators": [
+      {
+        "pattern": "Inline event handler (onclick/onerror\u2026)",
+        "count": 1
+      }
+    ],
+    "sqli": [],
+    "open_redirect": [],
+    "directory_listing": []
+  }
+}
