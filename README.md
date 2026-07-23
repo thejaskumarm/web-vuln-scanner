@@ -36,7 +36,7 @@ Web Vulnerability Scanner provides website owners and security enthusiasts with 
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/bhuvangm/web-vuln-scanner.git
+   git clone https://github.com/thejaskumarm/web-vuln-scanner.git
    cd web-vuln-scanner
    ```
 
