@@ -75,7 +75,8 @@ def section(title):
 
 
 # ─────────────────────────────────────────────
-#  Thread-local session (one per scan thread)
+#  Per-scan session (fresh per scan to prevent
+#  cookie/state bleed between different targets)
 # ─────────────────────────────────────────────
 _tls = threading.local()
 _UA = (
@@ -87,11 +88,23 @@ _UA = (
 
 def get_session():
     """Return a thread-local requests.Session.
-    Each Flask worker / scan thread gets its own session,
-    preventing cookie bleed between concurrent users."""
-    if not hasattr(_tls, "session"):
+    A NEW session is created for every scan invocation (keyed by scan_id)
+    so cookies and state never bleed between different target websites."""
+    scan_id = getattr(_tls, "scan_id", None)
+    if not hasattr(_tls, "session") or _tls.session_scan_id != scan_id:
         _tls.session = requests.Session()
         _tls.session.headers.update({"User-Agent": _UA})
+        _tls.session_scan_id = scan_id
+    return _tls.session
+
+
+def new_scan_session():
+    """Call this at the START of each scan to ensure a fresh session."""
+    import uuid
+    _tls.scan_id = str(uuid.uuid4())
+    _tls.session = requests.Session()
+    _tls.session.headers.update({"User-Agent": _UA})
+    _tls.session_scan_id = _tls.scan_id
     return _tls.session
 
 
@@ -465,31 +478,48 @@ def check_sqli(url, soup, findings):
 def check_open_redirect(url, soup, findings):
     section("CHECK 9 │ Open Redirect Detection  (OWASP A01)")
 
-    redirect_params = [
+    evil_domain = "evil-attacker.example.com"
+    redirect_param_names = {
         "url", "redirect", "next", "return", "returnurl", "return_url",
         "redirect_to", "redirect_url", "goto", "target", "dest", "destination",
         "forward", "location", "continue", "link", "out",
-    ]
+    }
 
-    # Only test parameters present in the URL or query parameters discovered on the page
+    parsed = urlparse(url)
+
+    # Collect redirect-like params from the URL query string
+    url_params = set(parse_qs(parsed.query).keys())
+
+    # Also collect from anchor links on the page
+    page_link_params = set()
+    for a in soup.find_all("a", href=True):
+        href = a["href"]
+        if "?" in href:
+            link_parsed = urlparse(href)
+            page_link_params.update(parse_qs(link_parsed.query).keys())
+
+    # Only probe params that look like redirect params
+    all_params = url_params | page_link_params
+    page_params = list(all_params & redirect_param_names)
+
     if not page_params:
-        info("No query parameters in target URL; skipping speculative open redirect probes.")
+        info("No redirect-like query parameters found; skipping open redirect probes.")
         findings["open_redirect"] = []
         return
 
-    info(f"Testing {len(page_params)} parameter(s) for open redirect…")
+    info(f"Testing {len(page_params)} redirect-like parameter(s) for open redirect…")
 
     def _probe_redirect(param):
         test_url = urlunparse((
             parsed.scheme, parsed.netloc, parsed.path,
-            parsed.params, f"{param}={evil_domain}", ""
+            parsed.params, f"{param}=https://{evil_domain}/pwned", ""
         ))
         try:
             r = get_session().get(test_url, timeout=4, allow_redirects=False)
             location = r.headers.get("Location", "")
             # Ensure it redirects specifically to the untrusted evil domain host
             loc_parsed = urlparse(location)
-            if r.status_code in (301, 302, 303, 307, 308) and loc_parsed.netloc == "evil-attacker.example.com":
+            if r.status_code in (301, 302, 303, 307, 308) and loc_parsed.netloc == evil_domain:
                 vuln(f"Open Redirect via '?{param}=' → redirects to {location}")
                 return {"param": param, "test_url": test_url}
         except Exception:

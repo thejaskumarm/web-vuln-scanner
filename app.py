@@ -20,6 +20,7 @@ from flask_cors import CORS
 # Import all scanner checks and helpers from scanner.py
 from scanner import (
     fetch,
+    new_scan_session,
     check_security_headers,
     check_https,
     check_sensitive_files,
@@ -77,6 +78,7 @@ def scan():
     def generate():
         findings = {}
         scan_start = time.time()
+        new_scan_session()  # fresh session per scan — no cookie bleed between sites
 
         def emit(event_type, data):
             """Format and yield an SSE message."""
