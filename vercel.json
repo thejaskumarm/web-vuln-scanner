@@ -1,4 +1,3 @@
-# vercel.json for Python Flask App on Vercel
 {
   "version": 2,
   "builds": [
