@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Web Vulnerability Scanner — OWASP Top 10 — Technical Implementation Report</title>
+  <style>
+    @page {
+      size: A4 portrait;
+      margin: 18mm 16mm 18mm 16mm;
+    }
+    
+    * {
+      box-sizing: border-box;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color: #1e293b;
+      background-color: #ffffff;
+      margin: 0;
+      padding: 0;
+      font-size: 12.5px;
+      line-height: 1.55;
+    }
+
+    /* Cover Page */
+    .cover-page {
+      page-break-after: always;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 920px;
+      padding: 45px 30px;
+      background: linear-gradient(135deg, #0b1329 0%, #1e1b4b 50%, #0f172a 100%);
+      color: #ffffff;
+      border-radius: 16px;
+      margin-bottom: 20px;
+    }
+
+    .cover-header {
+      border-bottom: 2px solid rgba(255, 255, 255, 0.15);
+      padding-bottom: 25px;
+    }
+
+    .cover-badge {
+      display: inline-block;
+      padding: 6px 18px;
+      background: rgba(99, 102, 241, 0.3);
+      border: 1px solid #818cf8;
+      border-radius: 20px;
+      color: #c7d2fe;
+      font-weight: 700;
+      font-size: 12px;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      margin-bottom: 15px;
+    }
+
+    .cover-title {
+      font-size: 36px;
+      font-weight: 800;
+      line-height: 1.25;
+      margin: 10px 0 18px 0;
+      background: linear-gradient(to right, #ffffff, #a5b4fc);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .cover-subtitle {
+      font-size: 15px;
+      color: #cbd5e1;
+      max-width: 680px;
+      line-height: 1.7;
+    }
+
+    .cover-features {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+      margin: 40px 0;
+    }
+
+    .cover-feat {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 12px;
+      padding: 20px;
+    }
+
+    .cover-feat h3 {
+      font-size: 15px;
+      margin: 0 0 6px 0;
+      color: #818cf8;
+      border: none;
+      padding: 0;
+    }
+
+    .cover-feat p {
+      color: #cbd5e1;
+      font-size: 11.5px;
+      margin: 0;
+      line-height: 1.5;
+    }
+
+    .cover-footer {
+      border-top: 1px solid rgba(255, 255, 255, 0.15);
+      padding-top: 20px;
+      display: flex;
+      justify-content: space-between;
+      color: #94a3b8;
+      font-size: 11px;
+    }
+
+    /* Section Layout */
+    .section-header {
+      border-bottom: 3px solid #4f46e5;
+      padding-bottom: 8px;
+      margin-top: 30px;
+      margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .section-title {
+      font-size: 21px;
+      font-weight: 800;
+      color: #0f172a;
+      margin: 0;
+    }
+
+    .section-tag {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 12px;
+      background: #e0e7ff;
+      color: #3730a3;
+      border-radius: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    h2 {
+      font-size: 17px;
+      color: #0f172a;
+      margin-top: 22px;
+      margin-bottom: 10px;
+      font-weight: 700;
+    }
+
+    h3 {
+      font-size: 14.5px;
+      color: #1e293b;
+      margin-top: 18px;
+      margin-bottom: 8px;
+      border-left: 4px solid #4f46e5;
+      padding-left: 10px;
+      font-weight: 700;
+    }
+
+    p {
+      margin-top: 0;
+      margin-bottom: 12px;
+      color: #334155;
+    }
+
+    ul, ol {
+      margin-top: 0;
+      margin-bottom: 14px;
+      padding-left: 20px;
+      color: #334155;
+    }
+
+    li {
+      margin-bottom: 5px;
+    }
+
+    .callout {
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      border-left: 4px solid #16a34a;
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin: 15px 0;
+      font-size: 12px;
+      color: #14532d;
+    }
+
+    .callout-title {
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .feature-box {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 14px;
+    }
+
+    .feature-box h4 {
+      margin: 0 0 6px 0;
+      font-size: 13.5px;
+      color: #0f172a;
+      font-weight: 700;
+    }
+
+    .feature-box p {
+      margin: 0;
+      font-size: 11.5px;
+      color: #64748b;
+      line-height: 1.45;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 15px 0 22px 0;
+      font-size: 11.5px;
+    }
+
+    th, td {
+      padding: 9px 12px;
+      text-align: left;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    th {
+      background-color: #f1f5f9;
+      color: #1e293b;
+      font-weight: 700;
+    }
+
+    tr:nth-child(even) {
+      background-color: #f8fafc;
+    }
+
+    .screenshot-card {
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      padding: 14px;
+      margin-bottom: 22px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.04);
+      page-break-inside: avoid;
+    }
+
+    .screenshot-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      border-bottom: 1px solid #f1f5f9;
+      padding-bottom: 8px;
+    }
+
+    .screenshot-title {
+      font-weight: 700;
+      font-size: 13.5px;
+      color: #0f172a;
+    }
+
+    .screenshot-badge {
+      font-size: 10.5px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-weight: 700;
+      background: #e0e7ff;
+      color: #3730a3;
+    }
+
+    .screenshot-img {
+      width: 100%;
+      height: auto;
+      border-radius: 6px;
+      border: 1px solid #e2e8f0;
+      display: block;
+      margin-bottom: 10px;
+    }
+
+    .screenshot-caption {
+      font-size: 11.5px;
+      color: #475569;
+      line-height: 1.45;
+      background: #f8fafc;
+      padding: 10px 14px;
+      border-radius: 6px;
+      border-left: 3.5px solid #4f46e5;
+    }
+
+    .code-block {
+      font-family: "JetBrains Mono", Consolas, Monaco, monospace;
+      background: #0f172a;
+      color: #f8fafc;
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 11px;
+      line-height: 1.5;
+      overflow-x: auto;
+      margin: 12px 0;
+    }
+
+    .badge-green { background: #dcfce7; color: #166534; }
+    .badge-yellow { background: #fef9c3; color: #854d0e; }
+    .badge-red { background: #fee2e2; color: #991b1b; }
+
+    .page-break {
+      page-break-after: always;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ========================================== -->
+  <!-- COVER PAGE                                 -->
+  <!-- ========================================== -->
+  <div class="cover-page">
+    <div class="cover-header">
+      <div class="cover-badge">Cybersecurity Project Report</div>
+      <div class="cover-title">Web Vulnerability Scanner<br>(OWASP Top 10)</div>
+      <div class="cover-subtitle">
+        An in-depth architectural breakdown, real-world operational analysis, code logic explanation, step-by-step usage guide, and complete visual evidence report for the Web Vulnerability Scanner — an automated security auditing tool that detects critical web application misconfigurations.
+      </div>
+    </div>
+
+    <div class="cover-features">
+      <div class="cover-feat">
+        <h3>🛡️ Security Headers & TLS</h3>
+        <p>Verifies CSP, X-Frame-Options, HSTS, HTTPS enforcement, and SSL certificate validity.</p>
+      </div>
+      <div class="cover-feat">
+        <h3>💉 Injection & XSS Detection</h3>
+        <p>Probes for SQL Injection error tracebacks and detects unsafe inline scripting patterns like eval() and document.write().</p>
+      </div>
+      <div class="cover-feat">
+        <h3>📂 Sensitive File Exposure</h3>
+        <p>Scans for exposed .env, .git/config, backup.sql, and wp-config.php with soft-404 false positive filtering.</p>
+      </div>
+      <div class="cover-feat">
+        <h3>⚡ Real-Time SSE Streaming</h3>
+        <p>Streams live progress events from Flask backend to the browser via Server-Sent Events for instant feedback.</p>
+      </div>
+    </div>
+
+    <div class="cover-footer">
+      <div><strong>Developer:</strong> Thejas Kumar M</div>
+      <div><strong>Document Type:</strong> Comprehensive Technical PDF</div>
+      <div><strong>Generated:</strong> July 24, 2026</div>
+    </div>
+  </div>
+
+
+  <!-- ========================================== -->
+  <!-- SECTION 1: WHAT IS THIS PROJECT?           -->
+  <!-- ========================================== -->
+  <div class="section-header">
+    <div class="section-title">🔍 Web Vulnerability Scanner (OWASP Top 10)</div>
+    <div class="section-tag">Python • Flask • ThreadPoolExecutor • SSE</div>
+  </div>
+
+  <h2>1. What is this Project & Why was it Built?</h2>
+  <p>
+    The <strong>Web Vulnerability Scanner</strong> is a lightweight, high-speed automated security testing suite designed for website owners, system administrators, and security enthusiasts. Modern web applications frequently suffer from silent misconfigurations — missing security headers, unencrypted cookies, exposed configuration files, or SQL injection entry points — which attackers exploit to compromise servers, hijack sessions, or steal sensitive user data.
+  </p>
+  <p>
+    This project was created to provide an <strong>instant, interactive, web-based scanner</strong> that runs 10 parallel security checks aligned with the <strong>OWASP Top 10 Security Standard</strong> and streams results directly into a sleek dark glassmorphic browser interface. It supports both a web UI mode (via Flask) and a command-line interface (CLI) for terminal-based scanning.
+  </p>
+
+  <h2>2. System Architecture & Tech Stack Breakdown</h2>
+  <ul>
+    <li><strong>Backend — Python 3 & Flask:</strong> Manages HTTP endpoint routes (<code>/</code> for the UI, <code>/scan</code> for streaming SSE). Uses the <code>requests</code> library for HTTP probing and <code>BeautifulSoup4</code> for HTML DOM parsing, form extraction, and inline script analysis.</li>
+    <li><strong>Concurrent Execution Engine — <code>ThreadPoolExecutor</code>:</strong> Runs all 10 independent vulnerability checks concurrently in background worker threads, reducing total scan duration from minutes to just seconds.</li>
+    <li><strong>Server-Sent Events (SSE):</strong> The Flask <code>/scan</code> endpoint emits continuous event streams (<code>mimetype="text/event-stream"</code>) containing JSON progress payloads. The browser receives live updates as each audit check finishes — no page reloads needed.</li>
+    <li><strong>Frontend — Vanilla HTML5 / CSS3 / JavaScript:</strong> Implements an interactive dark glassmorphic design system using CSS custom properties, glowing <code>backdrop-filter: blur()</code> panels, responsive grid layouts, and accessible dark mode aesthetics. Uses the native browser <code>EventSource</code> API to process incoming SSE events.</li>
+    <li><strong>Report Generation:</strong> Automatically generates self-contained offline HTML and JSON reports with categorized risk levels (High, Medium, Low), remediation recommendations, and execution timestamps.</li>
+  </ul>
+
+  <h2>3. Core Features</h2>
+  <div class="grid-2">
+    <div class="feature-box">
+      <h4>🛡️ 10 Parallel Security Checks</h4>
+      <p>Parallelized execution across HTTP/HTTPS flags, Security Headers, Sensitive Files, Cookie Security, CSRF Tokens, Server Info Leaks, Inline XSS, SQL Injection, Open Redirects, and Directory Listing.</p>
+    </div>
+    <div class="feature-box">
+      <h4>⚡ Real-Time SSE Progress Stream</h4>
+      <p>Streams JSON progress packets via Server-Sent Events from Flask to the frontend, smoothly animating progress bars and updating check indicators dynamically.</p>
+    </div>
+    <div class="feature-box">
+      <h4>🎨 Glassmorphic Dark Mode UI</h4>
+      <p>Built with Vanilla HTML5 and CSS3 using custom HSL design tokens, glowing backdrop filters, responsive grids, and accessible dark mode visual aesthetics.</p>
+    </div>
+    <div class="feature-box">
+      <h4>📄 HTML & JSON Report Export</h4>
+      <p>Generates self-contained offline HTML reports containing categorized risk cards (High, Medium, Low) and actionable remediation steps. Also exports raw JSON findings.</p>
+    </div>
+  </div>
+
+  <div class="page-break"></div>
+
+
+  <!-- ========================================== -->
+  <!-- SECTION 2: VULNERABILITY AUDIT DETAILS     -->
+  <!-- ========================================== -->
+  <div class="section-header">
+    <div class="section-title">📋 In-Depth Security Audit Vector Explanations</div>
+    <div class="section-tag">OWASP Top 10 Compliance</div>
+  </div>
+
+  <p>
+    The scanner implements 10 distinct vulnerability audit checks. Each check targets a specific category from the OWASP Top 10 standard and uses automated detection algorithms to identify misconfigurations.
+  </p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Audit Vector</th>
+        <th>OWASP Category</th>
+        <th>Risk</th>
+        <th>Technical Detection Logic</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>1</td>
+        <td><strong>Security Headers</strong></td>
+        <td>A05: Security Misconfiguration</td>
+        <td><span class="screenshot-badge badge-yellow">Medium</span></td>
+        <td>Inspects HTTP response headers for missing <code>Content-Security-Policy</code>, <code>X-Frame-Options</code> (Clickjacking defense), <code>Strict-Transport-Security</code> (HSTS), <code>X-Content-Type-Options</code> (MIME sniffing), and <code>Referrer-Policy</code>.</td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td><strong>HTTPS / TLS Config</strong></td>
+        <td>A02: Cryptographic Failures</td>
+        <td><span class="screenshot-badge badge-red">High</span></td>
+        <td>Validates SSL/TLS connection establishment, certificate expiration, and verifies whether plaintext HTTP requests are automatically redirected to encrypted HTTPS routes.</td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td><strong>Sensitive File Exposure</strong></td>
+        <td>A01: Broken Access Control</td>
+        <td><span class="screenshot-badge badge-red">High</span></td>
+        <td>Probes for exposed configuration files (<code>.env</code>, <code>.git/config</code>, <code>backup.sql</code>, <code>config.php</code>, <code>wp-config.php</code>). Uses soft-404 verification to eliminate false positives from servers returning custom 200 OK error pages.</td>
+      </tr>
+      <tr>
+        <td>4</td>
+        <td><strong>Cookie Flag Inspection</strong></td>
+        <td>A07: Auth Failures</td>
+        <td><span class="screenshot-badge badge-yellow">Medium</span></td>
+        <td>Parses <code>Set-Cookie</code> directives to ensure session cookies have <code>HttpOnly</code> (prevents XSS cookie theft), <code>Secure</code> (HTTPS only), and <code>SameSite</code> flags.</td>
+      </tr>
+      <tr>
+        <td>5</td>
+        <td><strong>CSRF Token Verification</strong></td>
+        <td>A01: Broken Access Control</td>
+        <td><span class="screenshot-badge badge-yellow">Medium</span></td>
+        <td>Parses HTML <code>&lt;form&gt;</code> elements with BeautifulSoup4 to verify the presence of hidden CSRF protection fields (<code>csrf_token</code>, <code>_token</code>, <code>authenticity_token</code>).</td>
+      </tr>
+      <tr>
+        <td>6</td>
+        <td><strong>Server Info Leakage</strong></td>
+        <td>A05: Security Misconfiguration</td>
+        <td><span class="screenshot-badge badge-green">Low</span></td>
+        <td>Checks for overly verbose server signatures (<code>Server: Apache/2.4.41</code>, <code>X-Powered-By: Express</code>) that reveal underlying tech stacks to attackers.</td>
+      </tr>
+      <tr>
+        <td>7</td>
+        <td><strong>Inline XSS Patterns</strong></td>
+        <td>A03: Injection</td>
+        <td><span class="screenshot-badge badge-red">High</span></td>
+        <td>Scans inline scripts for dangerous functions like <code>eval()</code>, <code>document.write()</code>, unescaped DOM sinks, and inline event handlers (<code>onload=</code>, <code>onerror=</code>).</td>
+      </tr>
+      <tr>
+        <td>8</td>
+        <td><strong>SQL Injection Probing</strong></td>
+        <td>A03: Injection</td>
+        <td><span class="screenshot-badge badge-red">High</span></td>
+        <td>Appends SQL syntax probes (<code>'</code>, <code>1' OR '1'='1</code>) to URL query parameters and inspects responses for database error tracebacks (MySQL, PostgreSQL, SQLite, MSSQL).</td>
+      </tr>
+      <tr>
+        <td>9</td>
+        <td><strong>Open Redirect</strong></td>
+        <td>A01: Broken Access Control</td>
+        <td><span class="screenshot-badge badge-yellow">Medium</span></td>
+        <td>Injects external redirect targets into common redirect parameters (<code>redirect</code>, <code>next</code>, <code>url</code>) to test if unvalidated external redirects are allowed.</td>
+      </tr>
+      <tr>
+        <td>10</td>
+        <td><strong>Directory Listing</strong></td>
+        <td>A05: Security Misconfiguration</td>
+        <td><span class="screenshot-badge badge-yellow">Medium</span></td>
+        <td>Requests common directories (<code>/static/</code>, <code>/uploads/</code>, <code>/images/</code>) and checks for HTML signatures indicating enabled auto-indexing (<code>Index of /</code>).</td>
+      </tr>
+    </tbody>
+  </table>
+
+
+  <!-- ========================================== -->
+  <!-- SECTION 3: HOW TO INSTALL & RUN            -->
+  <!-- ========================================== -->
+  <div class="section-header">
+    <div class="section-title">💻 How to Install and Run on Your Computer</div>
+    <div class="section-tag">Setup & Usage Guide</div>
+  </div>
+
+  <h3>Prerequisites</h3>
+  <ul>
+    <li><strong>Python 3.8+</strong> installed on your system</li>
+    <li><strong>pip</strong> (Python package manager)</li>
+    <li>A modern web browser (Chrome, Firefox, Edge, Safari)</li>
+  </ul>
+
+  <h3>Step-by-Step Installation</h3>
+  <div class="code-block">
+# Step 1: Clone the repository from GitHub
+git clone https://github.com/thejaskumarm/web-vuln-scanner.git
+cd web-vuln-scanner
+
+# Step 2: Create & activate a Python Virtual Environment
+python3 -m venv venv
+source venv/bin/activate          # macOS / Linux
+# venv\Scripts\activate           # Windows
+
+# Step 3: Install all required dependencies
+pip install -r requirements.txt
+  </div>
+
+  <h3>Running the Application</h3>
+  <div class="code-block">
+# Option A: Web Application Mode (Flask UI)
+python app.py
+# Open browser at: http://localhost:8080
+
+# Option B: Command-Line Interface (CLI Mode)
+python scanner.py https://example.com --report --output scan_results
+  </div>
+
+  <h3>Usage Workflow</h3>
+  <ol>
+    <li>Open <code>http://localhost:8080</code> in your web browser.</li>
+    <li>Enter the target URL (e.g., <code>https://example.com</code>) in the scan bar.</li>
+    <li>Click <strong>Scan Now</strong>.</li>
+    <li>Monitor the live SSE progress panel as all 10 checks execute in parallel.</li>
+    <li>Review the categorized findings cards with severity labels and OWASP tags.</li>
+    <li>Click <strong>⬇ Report</strong> to download the offline HTML report, or click 📋 next to any finding to copy it.</li>
+  </ol>
+
+  <div class="page-break"></div>
+
+
+  <!-- ========================================== -->
+  <!-- SECTION 4: SCREENSHOTS & VISUAL EVIDENCE   -->
+  <!-- ========================================== -->
+  <div class="section-header">
+    <div class="section-title">📸 Project Working & Visual Evidence</div>
+    <div class="section-tag">Screenshots & Implementation Details</div>
+  </div>
+
+  <!-- Screenshot 1 -->
+  <div class="screenshot-card">
+    <div class="screenshot-header">
+      <div class="screenshot-title">1. Landing Page & Scan Input Interface</div>
+      <div class="screenshot-badge">Initial View</div>
+    </div>
+    <img src="screenshots/01_vuln_scanner_landing.png" class="screenshot-img" alt="Web Vulnerability Scanner Landing Page">
+    <div class="screenshot-caption">
+      <strong>Working Explanation:</strong> The user enters the target domain into the centralized scan bar. The dark glassmorphic UI features animated background grids, glowing gradient effects, and a security compliance disclaimer reminding users to only scan authorized targets.
+    </div>
+  </div>
+
+  <!-- Screenshot 2 -->
+  <div class="screenshot-card">
+    <div class="screenshot-header">
+      <div class="screenshot-title">2. Live Scan Execution & Real-Time SSE Progress Stream</div>
+      <div class="screenshot-badge">Live Streaming</div>
+    </div>
+    <img src="screenshots/02_vuln_scanner_progress.png" class="screenshot-img" alt="Web Vulnerability Scanner Progress Stream">
+    <div class="screenshot-caption">
+      <strong>Working Explanation:</strong> Upon clicking "Scan Now", Flask opens an SSE connection (<code>/scan?url=...</code>). The backend's <code>ThreadPoolExecutor</code> workers stream JSON progress events, smoothly animating the progress bar from 0% to 100% and updating each check label in real time as the security audits complete.
+    </div>
+  </div>
+
+  <!-- Screenshot 3 -->
+  <div class="screenshot-card">
+    <div class="screenshot-header">
+      <div class="screenshot-title">3. Scan Completion & Categorized Risk Findings</div>
+      <div class="screenshot-badge">Results View</div>
+    </div>
+    <img src="screenshots/03_vuln_scanner_results.png" class="screenshot-img" alt="Web Vulnerability Scanner Audit Results">
+    <div class="screenshot-caption">
+      <strong>Working Explanation:</strong> When the scan completes, findings are categorized into color-coded risk cards (High / Medium / Low). Each card displays the OWASP category tag, list of discovered issues (e.g., missing headers, insecure cookies), and a one-click clipboard copy button for sharing findings.
+    </div>
+  </div>
+
+  <!-- Screenshot 4 -->
+  <div class="screenshot-card">
+    <div class="screenshot-header">
+      <div class="screenshot-title">4. Exported Standalone HTML Security Assessment Report</div>
+      <div class="screenshot-badge">Offline Report</div>
+    </div>
+    <img src="screenshots/04_vuln_scanner_report.png" class="screenshot-img" alt="Web Vulnerability Scanner Offline HTML Report">
+    <div class="screenshot-caption">
+      <strong>Working Explanation:</strong> Clicking "Report" generates a portable, self-contained HTML document. It includes total risk tallies, execution timestamps, severity color coding, detailed per-check findings, and actionable remediation recommendations for developers and system administrators.
+    </div>
+  </div>
+
+
+  <!-- ========================================== -->
+  <!-- SECTION 5: TECH STACK TABLE                -->
+  <!-- ========================================== -->
+  <div class="section-header">
+    <div class="section-title">🛠️ Technology Stack Summary</div>
+    <div class="section-tag">Dependencies & Libraries</div>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Layer</th>
+        <th>Technology</th>
+        <th>Purpose</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Backend</strong></td>
+        <td>Python 3, Flask</td>
+        <td>HTTP routing, SSE streaming, request handling</td>
+      </tr>
+      <tr>
+        <td><strong>HTTP Client</strong></td>
+        <td>Requests</td>
+        <td>URL probing, header inspection, redirect following</td>
+      </tr>
+      <tr>
+        <td><strong>HTML Parser</strong></td>
+        <td>BeautifulSoup4</td>
+        <td>DOM traversal, form extraction, inline script analysis</td>
+      </tr>
+      <tr>
+        <td><strong>Concurrency</strong></td>
+        <td>concurrent.futures (ThreadPoolExecutor)</td>
+        <td>Parallel execution of 10 security checks</td>
+      </tr>
+      <tr>
+        <td><strong>Frontend</strong></td>
+        <td>Vanilla HTML5, CSS3, JavaScript</td>
+        <td>Glassmorphism UI, EventSource SSE, dynamic DOM updates</td>
+      </tr>
+      <tr>
+        <td><strong>Deployment</strong></td>
+        <td>Vercel / Docker / Gunicorn</td>
+        <td>Production hosting and containerized deployment</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout">
+    <div class="callout-title">✅ Conclusion</div>
+    The Web Vulnerability Scanner has been fully developed, tested, and verified. It provides robust automated security assessments based on the OWASP Top 10 standard, featuring real-time SSE streaming, concurrent multi-threaded scanning, a modern glassmorphic dark-mode interface, and exportable HTML/JSON reports with actionable remediation guidance.
+  </div>
+
+  <div class="callout" style="background: #eff6ff; border-color: #bfdbfe; border-left-color: #3b82f6; color: #1e3a5f;">
+    <div class="callout-title">⚠️ Disclaimer</div>
+    This tool is created strictly for <strong>educational and defensive security purposes</strong>. Only scan websites you own or have explicit authorization to test. Unauthorized scanning is illegal and unethical.
+  </div>
+
+</body>
+</html>
